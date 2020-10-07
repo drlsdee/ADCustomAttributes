@@ -1,2 +1,2 @@
 # ADCustomAttributes
- Here should be a PS module creating custom AD attributes in AD schema
+A small PowerShell module creating custom AD attributes in AD schema. Inspired by this [article](https://www.dataart.ru/news/extending-active-directory-schema-to-store-application-configuration-powershell-examples/)
