@@ -1,4 +1,15 @@
-﻿[string]$nuGetApiKey        = [System.IO.File]::ReadAllLines("$PSScriptRoot\NuGet-apikey.txt")
+﻿[CmdletBinding()]
+param (
+    [Parameter()]
+    [ValidateSet('Manifest', 'Publish')]
+    [string]
+    $Action
+)
+
+[string]$nuGetApiFile       = [System.IO.Directory]::EnumerateFiles($PSScriptRoot, '*-apikey.txt')[0]
+[string]$nuGetRepoName      = ([string]([System.IO.Path]::GetFileNameWithoutExtension($nuGetApiFile))).Split('-')[0]
+[string]$nuGetApiKey        = [System.IO.File]::ReadAllLines($nuGetApiFile)
+
 [string]$moduleName         = [System.IO.Path]::GetFileNameWithoutExtension($PSScriptRoot)
 [string]$modulePath         = [System.IO.Path]::Combine($PSScriptRoot, 'Module', $moduleName)
 [string]$moduleRootName     = "$($moduleName).psm1"
@@ -8,7 +19,7 @@
 [string]$powerShellVersion  = "$($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)"
 [string]$functionPublic     = [System.IO.Path]::Combine($modulePath, 'Functions', 'Public')
 [string[]]$funcToExport     = ([System.IO.FileInfo[]]([System.IO.Directory]::EnumerateFiles($functionPublic, '*.ps1'))).BaseName
-$manifestContent
+
 [string]$funcExportString   = [string]::Join(', ', ($funcToExport.ForEach({"`'$_`'"})))
 [string]$functionsToExport  = "FunctionsToExport = $funcExportString"
 [string]$versionOldRaw      = $manifestContent -match '^\s*ModuleVersion\s*='
@@ -38,3 +49,15 @@ switch ($versionOldValue)   {
 [string[]]$contentNew       = (($manifestContent -replace 'ModuleVersion.*', $versionToManifest) `
                                                 -replace 'FunctionsToExport.*', $functionsToExport) `
                                                 -replace 'PowerShellVersion.*', "PowerShellVersion = `'$powerShellVersion`'"
+
+switch ($Action) {
+    'Manifest'  {
+        Set-Content -Encoding UTF8 -Path $moduleManifestPath -Value $contentNew
+    }
+    'Publish'   {
+        Publish-Module -Path $modulePath -Repository $nuGetRepoName -NuGetApiKey $nuGetApiKey -Verbose -WhatIf
+    }
+    Default {
+        Write-Host -ForegroundColor Yellow "No action selected!"
+    }
+}
