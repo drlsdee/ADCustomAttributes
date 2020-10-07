@@ -1,7 +1,7 @@
 ﻿[CmdletBinding()]
 param (
     [Parameter()]
-    [ValidateSet('Manifest', 'Publish')]
+    [ValidateSet('Manifest', 'Publish', 'All')]
     [string]
     $Action
 )
@@ -55,7 +55,11 @@ switch ($Action) {
         Set-Content -Encoding UTF8 -Path $moduleManifestPath -Value $contentNew
     }
     'Publish'   {
-        Publish-Module -Path $modulePath -Repository $nuGetRepoName -NuGetApiKey $nuGetApiKey -Verbose -WhatIf
+        Publish-Module -Path $modulePath -Repository $nuGetRepoName -NuGetApiKey $nuGetApiKey -Verbose
+    }
+    'All'       {
+        Set-Content -Encoding UTF8 -Path $moduleManifestPath -Value $contentNew
+        Publish-Module -Path $modulePath -Repository $nuGetRepoName -NuGetApiKey $nuGetApiKey -Verbose
     }
     Default {
         Write-Host -ForegroundColor Yellow "No action selected!"
